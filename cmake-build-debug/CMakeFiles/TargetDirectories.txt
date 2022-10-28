@@ -1,0 +1,3 @@
+C:/Users/itach/Documents/estrutura de dados/v1/EstruturaDeDados.2/cmake-build-debug/CMakeFiles/EstruturaDeDados.2.dir
+C:/Users/itach/Documents/estrutura de dados/v1/EstruturaDeDados.2/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/itach/Documents/estrutura de dados/v1/EstruturaDeDados.2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
