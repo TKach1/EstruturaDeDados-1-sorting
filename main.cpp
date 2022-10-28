@@ -21,6 +21,14 @@ typedef struct fila{
     int tam;
 }fila;
 
+typedef struct line{
+    char nome[30];
+    int rg;
+}line;
+
+int lineTam = 0;
+const char* arq = "NomeRG10.txt";
+
 struct manager{
     long int m, c;
 };
@@ -141,7 +149,6 @@ void menu(node **head, fila *lista){
             searchRG(*head, rg);
             break;
         case 22:
-            docToList(head);
             sortingMenu(head);
             break;
         default:
@@ -153,29 +160,91 @@ void menu(node **head, fila *lista){
     menu(head, lista);
 }
 
-void InsertionSort(node **head){
-    node *nodeAtual= *head;
-    node *nodeModular;
-    node *paux = NULL;
-    while(nodeAtual->proximo!=NULL){
-        nodeModular = nodeAtual;
-        while(nodeModular->anterior!=NULL){
-            std::cout << nodeAtual->rg << std::endl;
-            std::cout << nodeModular->rg << " - ";
-            if(nodeModular->rg < nodeAtual->rg){
-                paux = nodeModular->proximo;
-                nodeAtual->proximo = nodeModular->proximo;
-                nodeAtual->anterior = nodeModular;
-                nodeModular->proximo = nodeAtual;
-                paux->anterior = nodeAtual;
-                break;
-            }
-            nodeModular = nodeModular->anterior;
-        }
-        std::cout << std::endl << std::endl;
+void QuickSort(){
 
-        nodeAtual = nodeAtual->proximo;
+}
+
+void ShellSort(line *lista){
+    for (int interval = lineTam / 2; interval > 0; interval /= 2) {
+        for (int i = interval; i < lineTam; i += 1) {
+            line temp = lista[i];
+            int j;
+            for (j = i; j >= interval && lista[j - interval].rg > temp.rg; j -= interval) {
+                lista[j] = lista[j - interval];
+            }
+            lista[j] = temp;
+        }
     }
+}
+
+void BubbleSort(node **head){
+    node* sorted = (*head)->proximo;
+    node* current = *head;
+    char nome[30];
+    int rg;
+    bool Swap = true;
+
+    while(Swap){
+        Swap = false;
+        while(sorted != NULL){
+            if(sorted->rg < current->rg){
+                strcpy(nome, current->nome);
+                rg = current->rg;
+                current->rg = sorted->rg;
+                strcpy(current->nome, sorted->nome);
+                sorted->rg = rg;
+                strcpy(sorted->nome, nome);
+                Swap = true;
+            }
+            current = current->proximo;
+            sorted = sorted->proximo;
+        }
+        sorted = (*head)->proximo;
+        current = *head;
+    }
+}
+
+void sortedInsert(node** head_ref, node* newNode)
+{
+    node* current;
+
+    if (*head_ref == NULL)
+        *head_ref = newNode;
+
+    else if ((*head_ref)->rg >= newNode->rg) {
+        newNode->proximo = *head_ref;
+        newNode->proximo->anterior = newNode;
+        *head_ref = newNode;
+    }
+
+    else {
+        current = *head_ref;
+
+        while (current->proximo != NULL && current->proximo->rg < newNode->rg)
+            current = current->proximo;
+
+        newNode->proximo = current->proximo;
+
+        if (current->proximo != NULL)
+            newNode->proximo->anterior = newNode;
+
+        current->proximo = newNode;
+        newNode->anterior = current;
+    }
+}
+
+void InsertionSort(node **head){
+    node* sorted = NULL;
+
+    node* current = *head;
+    while (current != NULL) {
+        node* next = current->proximo;
+        current->anterior = current->proximo = NULL;
+        sortedInsert(&sorted, current);
+        current = next;
+    }
+
+    *head = sorted;
 }
 
 void SelectionSort(node **head){
@@ -206,9 +275,66 @@ void SelectionSort(node **head){
     }
 }
 
+line* LS_docToList(line *lista){
+    char c;
+    int tam=0;
+    int i = 0, j = 0;
+    char nome[30];
+    char rg[8];
+    FILE *fp;
+    fp=fopen (arq,"r");
+    if (!fp) {
+        printf("Erro na abertura do arquivo.");
+    }
+    else {
+        while ((c = getc(fp)) != EOF) {
+            if(c == '\n') {
+                tam++;
+            }
+        }
+    }
+
+    lineTam = tam;
+    lista = (line *) malloc(lineTam * sizeof(line));
+    rewind(fp);
+    memset(nome, 0, sizeof(nome));
+    strcpy(rg, "");
+    while ((c = getc(fp)) != EOF) {
+        while(c != ','){
+            nome[i] = c;
+            i++;
+            c = getc(fp);
+        }
+        i=0;
+        c = getc(fp);
+        while(c != '\n' && c != EOF) {
+            rg[i] = c;
+            i++;
+            c = getc(fp);
+        }
+        i=0;
+        if(j < lineTam){
+            strcpy(lista[j].nome, nome);
+            lista[j].rg = atoi(rg);
+            j++;
+        }
+        memset(nome, 0, sizeof(nome));
+        strcpy(rg, "0000000");
+    }
+    return lista;
+}
+
+void LS_listar(line *lista){
+    for(int j = 0; j < lineTam; j++){
+        printf("\nNome: %s\nRG: %d \nPosição na lista: %d\n", lista[j].nome, lista[j].rg, j+1);
+    }
+}
+
 void sortingMenu(node **head){
+    line *lista = nullptr;
+    docToList(head);
     int op;
-    system("cls");
+    //system("cls");
     std::cout << "1 - Selection Sort\n"
               << "2 - Insertion Sort\n"
               << "3 - Bubble Sort\n"
@@ -219,9 +345,25 @@ void sortingMenu(node **head){
     switch(op){
         case 1:
             SelectionSort(head);
+            listar(*head);
             break;
         case 2:
             InsertionSort(head);
+            listar(*head);
+            break;
+        case 3:
+            BubbleSort(head);
+            listar(*head);
+            break;
+        case 4:
+            lista = LS_docToList(lista);
+            ShellSort(lista);
+            LS_listar(lista);
+            break;
+        case 5:
+            lista = LS_docToList(lista);
+            ShellSort(lista);
+            LS_listar(lista);
             break;
         default:
             std::cout << "opcao invalida";
@@ -657,12 +799,12 @@ void listar(node *head)
     printf("Nome: %s\n RG: %d \n\n", noatual->nome, noatual->rg);
     while(noatual->proximo != NULL){
         noatual = noatual->proximo;
-        //printf("Nome: %s\n RG: %d \n\n", noatual->nome, noatual->rg);
+        printf("Nome: %s\n RG: %d \n\n", noatual->nome, noatual->rg);
     }
-    while(noatual->anterior != NULL){
+    /*while(noatual->anterior != NULL){
         printf("Nome: %s\n RG: %d \n\n", noatual->nome, noatual->rg);
         noatual = noatual->anterior;
-    }
+    }*/
 }
 
 void desalocarAll(node *head){
