@@ -33,6 +33,8 @@ struct manager{
     long int m, c;
 };
 
+int binarySearch(line *lista, int x, int low, int high);
+
 void InsertionSort(node **head);
 void SelectionSort(node **head);
 void sortingMenu(node **head);
@@ -79,7 +81,7 @@ void menu(node **head, fila *lista){
     int n;
     char nome[30];
     int rg;
-    printf("1-Insercao de um no no início\n2-Insercao de um no no fim\n3-Insercao de um no na posicao N\n4-Retirar um no do início\n5-Retirar um no no fim\n6-Retirar um no na posicao N\n7-Procurar um no\n8-Mostrar a lista\n9-Salvar a lista em um arquivo\n10-Ler a lista de um arquivo\n11-Sair do sistema\n:");
+    printf("1-Insercao de um no no início\n2-Insercao de um no no fim\n3-Insercao de um no na posicao N\n4-Retirar um no do início\n5-Retirar um no no fim\n6-Retirar um no na posicao N\n7-Procurar um no\n8-Mostrar a lista\n9-Salvar a lista em um arquivo\n10-Ler a lista de um arquivo\n22-Sorting Menu\n11-Sair do sistema\n:");
     scanf("%d", &op);
     switch (op) {
         case 1:
@@ -160,8 +162,107 @@ void menu(node **head, fila *lista){
     menu(head, lista);
 }
 
-void QuickSort(){
+int binarySearch(line *lista, int x, int low, int high) {
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (lista[mid].rg == x) {
+            return mid;
+        }
+        if (lista[mid].rg < x)
+            low = mid + 1;
 
+        else
+            high = mid - 1;
+    }
+
+    return -1;
+}
+
+void swap(line *a, line *b) {
+    line t = *a;
+    *a = *b;
+    *b = t;
+}
+
+int partition(line *array, int low, int high) {
+    int pivot = array[high].rg;
+    int i = (low - 1);
+    for (int j = low; j < high; j++) {
+        if (array[j].rg <= pivot) {
+            i++;
+            swap(&array[i], &array[j]);
+        }
+    }
+
+    swap(&array[i + 1], &array[high]);
+    return (i + 1);
+}
+
+void merge(line *lista, int l, int m, int r)
+{
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 = r - m;
+
+    // listas temporarias
+    line L[n1], R[n2];
+
+    // atualiza os dados com seus respectivos particionados
+    for (i = 0; i < n1; i++)
+        L[i] = lista[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = lista[m + 1 + j];
+
+    i = 0;
+    j = 0;
+    k = l;
+    while (i < n1 && j < n2) { // volta os valores para o lugar adequado na lista principal
+        if (L[i].rg <= R[j].rg) {
+            lista[k] = L[i];
+            i++;
+        }
+        else {
+            lista[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+
+    //caso seja impar o numero de nós na lista primaria coloca na lista
+    while (i < n1) {
+        lista[k] = L[i];
+        i++;
+        k++;
+    }
+
+    //caso seja impar o numero de nós na lista secundaria coloca na lista
+    while (j < n2) {
+        lista[k] = R[j];
+        j++;
+        k++;
+    }
+}
+
+void MergeSort(line *lista, int low, int high){
+    if (low < high) {
+        int m = low + (high - low) / 2; //divide em partes iguais ou de 1 de diff
+
+        // Recursividade até ter 2 elementos separados
+        MergeSort(lista, low, m);
+        MergeSort(lista, m + 1, high);
+        //puxa merge
+        merge(lista, low, m, high);
+    }
+}
+
+void QuickSort(line *lista, int low, int high){
+    if (low < high) {
+
+        int pi = partition(lista, low, high);
+
+        QuickSort(lista, low, pi - 1);
+        QuickSort(lista, pi + 1, high);
+    }
 }
 
 void ShellSort(line *lista){
@@ -300,7 +401,7 @@ line* LS_docToList(line *lista){
     memset(nome, 0, sizeof(nome));
     strcpy(rg, "");
     while ((c = getc(fp)) != EOF) {
-        while(c != ','){
+        while(c != ',' && c != EOF){
             nome[i] = c;
             i++;
             c = getc(fp);
@@ -334,41 +435,62 @@ void sortingMenu(node **head){
     line *lista = nullptr;
     docToList(head);
     int op;
-    //system("cls");
-    std::cout << "1 - Selection Sort\n"
-              << "2 - Insertion Sort\n"
-              << "3 - Bubble Sort\n"
-              << "4 - Shell Sort\n"
-              << "5 - Quick sort\n"
-              << "6 - Merge sort" << std::endl;
-    std::cin >> op;
-    switch(op){
-        case 1:
-            SelectionSort(head);
-            listar(*head);
-            break;
-        case 2:
-            InsertionSort(head);
-            listar(*head);
-            break;
-        case 3:
-            BubbleSort(head);
-            listar(*head);
-            break;
-        case 4:
-            lista = LS_docToList(lista);
-            ShellSort(lista);
-            LS_listar(lista);
-            break;
-        case 5:
-            lista = LS_docToList(lista);
-            ShellSort(lista);
-            LS_listar(lista);
-            break;
-        default:
-            std::cout << "opcao invalida";
-            sortingMenu(head);
-            break;
+    int x, p;
+    bool stay = true;
+    while(stay) {
+        //system("cls");
+        std::cout << "1 - Selection Sort\n"
+                  << "2 - Insertion Sort\n"
+                  << "3 - Bubble Sort\n"
+                  << "4 - Shell Sort\n"
+                  << "5 - Quick sort\n"
+                  << "6 - Merge sort\n"
+                  << "7 - Pesquisa Binaria\n"
+                  << "8 - Voltar\n:";
+        std::cin >> op;
+        switch (op) {
+            case 1:
+                SelectionSort(head);
+                listar(*head);
+                break;
+            case 2:
+                InsertionSort(head);
+                listar(*head);
+                break;
+            case 3:
+                BubbleSort(head);
+                listar(*head);
+                break;
+            case 4:
+                lista = LS_docToList(lista);
+                ShellSort(lista);
+                LS_listar(lista);
+                break;
+            case 5:
+                lista = LS_docToList(lista);
+                QuickSort(lista, 0, lineTam - 1);
+                LS_listar(lista);
+                break;
+            case 6:
+                lista = LS_docToList(lista);
+                MergeSort(lista, 0, lineTam - 1);
+                LS_listar(lista);
+                break;
+            case 7:
+                std::cout << "Digite o rg de pesquisa\n:";
+                std::cin >> x;
+                p = binarySearch(lista, x, 0, lineTam - 1);
+                if (p != -1) {
+                    printf("\nNome: %s\nRG: %d \nPosição na lista: %d\n\n", lista[p].nome, lista[p].rg, p + 1);
+                } else {
+                    std::cout << "Não foi encontrado o RG digitado\n:";
+                }
+                break;
+            default:
+                std::cout << "Saindo...\n";
+                stay = false;
+                break;
+        }
     }
 }
 
